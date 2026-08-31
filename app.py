@@ -263,13 +263,24 @@ def fetch_shopify_products(first=250, after=None):
                         price_range = node.get('priceRange', {})
                         min_price = price_range.get('minVariantPrice', {})
                         
+                        # Convert price from cents to dollars
+                        price_amount = min_price.get('amount', 'N/A')
+                        if price_amount and price_amount != 'N/A':
+                            try:
+                                price_in_dollars = float(price_amount) / 100
+                                formatted_price = f"{price_in_dollars:.2f}"
+                            except (ValueError, TypeError):
+                                formatted_price = 'N/A'
+                        else:
+                            formatted_price = 'N/A'
+                        
                         all_products.append({
                             'id': node['id'],
                             'title': node['title'],
                             'handle': node['handle'],
                             'image': featured_image.get('url') if featured_image else None,
                             'imageAlt': featured_image.get('altText', node['title']) if featured_image else node['title'],
-                            'price': min_price.get('amount', 'N/A'),
+                            'price': formatted_price,
                             'currency': min_price.get('currencyCode', 'USD')
                         })
                     

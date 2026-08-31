@@ -426,7 +426,7 @@
                     ${product.image ? `<img src="${product.image}" alt="${product.imageAlt}" class="product-image">` : '<div class="product-image" style="display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 12px;">No Image</div>'}
                     <div class="product-info">
                         <div class="product-title">${product.title}</div>
-                        ${product.price && product.price !== 'N/A' ? `<div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>` : ''}
+                        ${product.price && product.price !== 'N/A' ? `<div class="product-price">$${product.price}</div>` : ''}
                     </div>
                 </label>
             `).join('');
