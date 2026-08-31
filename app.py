@@ -10,160 +10,23 @@ app = Flask(__name__)
 app.register_blueprint(images_bp)
 
 # Only need ONE key now
-COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
-COMPOSIO_BASE_URL = "https://api.composio.dev/v1"
 
-headers = {
-    'Authorization': f'Bearer {COMPOSIO_API_KEY}',
-    'Content-Type': 'application/json'
-}
 
 # --- DataForSEO via Composio ---
 def research_keywords(keyword):
-    """Research keyword using DataForSEO API directly"""
-    print(f"Researching: {keyword}")
-    
     login = os.getenv('DATAFORSEO_LOGIN')
     pwd = os.getenv('DATAFORSEO_PASSWORD')
-    
     if not login or not pwd:
         return {'status': 'success', 'search_volume': 500, 'competition': 'MEDIUM', 'cpc': 2.0}
-    
     try:
         url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
-        response = requests.post(url, json=[{"keywords": [keyword]}], auth=(login, pwd), timeout=10)
-        if response.status_code == 200:
-            r = response.json().get('tasks', [{}])[0].get('result', [{}])[0]
-            return {'status': 'success', 'search_volume': r.get('search_volume', 0), 'competition': r.get('competition', 'MEDIUM'), 'cpc': r.get('cpc', 0)}
+        r = requests.post(url, json=[{"keywords": [keyword]}], auth=(login, pwd), timeout=10)
+        if r.status_code == 200:
+            res = r.json().get('tasks', [{}])[0].get('result', [{}])[0]
+            return {'status': 'success', 'search_volume': res.get('search_volume', 0), 'competition': res.get('competition', 'MEDIUM'), 'cpc': res.get('cpc', 0)}
         return {'status': 'success', 'search_volume': 500, 'competition': 'MEDIUM', 'cpc': 2.0}
-    except Exception as e:
+    except:
         return {'status': 'success', 'search_volume': 500, 'competition': 'MEDIUM', 'cpc': 2.0}
-
-# --- KoalaWriter via Composio ---
-def generate_blog_content(topic, products):
-    """Generate blog content using Koala AI API directly"""
-    print(f"Generating content for: {topic}")
-    
-    koala_api_key = os.getenv('KOALA_API_KEY')
-    
-    if not koala_api_key:
-        return {
-            'status': 'error',
-            'message': 'KOALA_API_KEY not configured',
-            'content': None
-        }
-    
-    products_str = ', '.join(products) if isinstance(products, list) else products
-    
-    prompt = f"""Write a premium soccer equipment buying guide blog post.
-
-Topic: {topic}
-Featured Products: {products_str}
-
-Structure:
-1. Introduction (150 words) - Hook with why this matters
-2. What You Need to Know (200 words) - Explain the tech/benefits
-3. Product Comparison (300 words) - Side-by-side comparison
-4. Detailed Reviews (400 words) - One section per product with specs
-5. How to Choose (200 words) - Decision framework
-6. FAQ (200 words) - Common questions  
-7. Conclusion (100 words) - Call to action to check Footbix
-
-Requirements:
-- Professional, engaging tone
-- SEO-optimized with natural keyword placement
-- Include specifications and use cases
-- Total: ~1500 words
-- Add image placeholders like [INSERT COMPARISON IMAGE]"""
-    
-    try:
-        headers = {
-            'Authorization': f'Bearer {koala_api_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        payload = {
-            'prompt': prompt,
-            'length': 'long',
-            'tone': 'professional'
-        }
-        
-        response = requests.post(
-            'https://api.koala.sh/v1/write',
-            json=payload,
-            headers=headers,
-            timeout=60
-        )
-        
-        if response.status_code == 200:
-            content = response.json().get('text', '')
-            if content:
-                return {
-                    'status': 'success',
-                    'content': content,
-                    'message': f'Generated {len(content)} characters'
-                }
-            else:
-                return {
-                    'status': 'error',
-                    'message': 'No content generated',
-                    'content': None
-                }
-        else:
-            return {
-                'status': 'error',
-                'message': f'Koala AI error: {response.status_code}',
-                'content': None
-            }
-    except Exception as e:
-        print(f"Koala AI error: {e}")
-        return {
-            'status': 'error',
-            'message': str(e),
-            'content': None
-        }
-def create_shopify_draft(title, content, metadata):
-    """Create Shopify draft using Composio's Shopify connection"""
-    print(f"Creating Shopify draft: {title}")
-    
-    try:
-        exec_url = f"{COMPOSIO_BASE_URL}/connectors/execute"
-        
-        body_html = f"""
-        <h1>{title}</h1>
-        <p><strong>Meta Description:</strong> {metadata['meta_description']}</p>
-        <p><strong>Keywords:</strong> {', '.join(metadata['keywords'])}</p>
-        <hr>
-        {content.replace(chr(10), '<br>')}
-        """
-        
-        payload = {
-            'connectorId': 'shopify',
-            'action': 'create_blog_article',
-            'input': {
-                'title': title,
-                'body_html': body_html,
-                'status': 'draft'
-            }
-        }
-        
-        response = requests.post(exec_url, json=payload, headers=headers)
-        
-        if response.status_code == 200:
-            result = response.json().get('result', {})
-            return {
-                'status': 'success',
-                'id': result.get('id'),
-                'url': result.get('url', '#'),
-                'title': result.get('title', title)
-            }
-        else:
-            return {
-                'status': 'error',
-                'message': f'Shopify error: {response.status_code}'
-            }
-    except Exception as e:
-        return {'status': 'error', 'message': str(e)}
 
 # --- Generate Metadata ---
 def generate_metadata(topic, products):
