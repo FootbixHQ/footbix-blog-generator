@@ -186,11 +186,10 @@
             
             <div class="form-group">
                 <label for="products">Products (optional)</label>
-                <textarea 
-                    id="products" 
-                    placeholder="Highlight the product keywords you want to target"
-                ></textarea>
-                <div class="hint">Highlight the product keywords you want to target</div>
+                <select id="products" multiple style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: inherit; min-height: 100px;">
+                    <option value="">Loading products...</option>
+                </select>
+                <div class="hint">Select products from your store. Hold Ctrl/Cmd to select multiple.</div>
             </div>
 
             <div class="form-group">
@@ -221,12 +220,45 @@
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
         const result = document.getElementById('result');
+        const productsSelect = document.getElementById('products');
+        
+        // Load products on page load
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.products.length > 0) {
+                    // Clear existing options
+                    productsSelect.innerHTML = '';
+                    
+                    // Add products
+                    data.products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.title;
+                        option.textContent = product.title;
+                        productsSelect.appendChild(option);
+                    });
+                } else {
+                    productsSelect.innerHTML = '<option value="">No products found</option>';
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                productsSelect.innerHTML = '<option value="">Error loading products</option>';
+            }
+        }
+        
+        // Load products when page loads
+        document.addEventListener('DOMContentLoaded', loadProducts);
         
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const topic = document.getElementById('topic').value;
-            const products = document.getElementById('products').value;
+            
+            // Get selected products
+            const selectedOptions = Array.from(productsSelect.selectedOptions);
+            const products = selectedOptions.map(opt => opt.value).join(', ');
             
             submitBtn.disabled = true;
             loading.style.display = 'block';

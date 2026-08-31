@@ -159,10 +159,64 @@ def generate_metadata(topic, products):
         ]
     }
 
+# --- Shopify Products ---
+def fetch_shopify_products():
+    """Fetch all products from Shopify store"""
+    try:
+        store_url = os.getenv('SHOPIFY_STORE_URL')
+        access_token = os.getenv('SHOPIFY_ADMIN_API_TOKEN')
+        api_version = os.getenv('SHOPIFY_API_VERSION', '2024-01')
+        
+        headers_shopify = {
+            'X-Shopify-Access-Token': access_token,
+            'Content-Type': 'application/json'
+        }
+        
+        url = f"{store_url}/admin/api/{api_version}/graphql.json"
+        query = """
+        {
+          products(first: 250) {
+            edges {
+              node {
+                id
+                title
+                handle
+              }
+            }
+          }
+        }
+        """
+        
+        response = requests.post(url, json={'query': query}, headers=headers_shopify, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if 'data' in data and 'products' in data['data']:
+                products = []
+                for edge in data['data']['products']['edges']:
+                    node = edge['node']
+                    products.append({
+                        'id': node['id'],
+                        'title': node['title'],
+                        'handle': node['handle']
+                    })
+                return products
+        
+        return []
+    except Exception as e:
+        print(f"Error fetching products: {e}")
+        return []
+
 # --- Web Routes ---
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    """API endpoint to fetch products"""
+    products = fetch_shopify_products()
+    return jsonify({'status': 'success', 'products': products})
 
 @app.route('/generate', methods=['POST'])
 def generate():
