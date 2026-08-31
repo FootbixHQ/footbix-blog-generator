@@ -357,16 +357,18 @@ def generate():
         
         # Step 2: Generate content
         content_result = generate_blog_content(topic, products_list)
-        if content_result['status'] != 'success':
-            return jsonify({'status': 'error', 'message': f'Content generation failed: {content_result.get("message")}'}), 500
+        if not content_result or content_result.get('status') != 'success' or not content_result.get('content'):
+            return jsonify({'status': 'error', 'message': f'Content generation failed: {content_result.get("message") if content_result else "No response"}'}), 500
         
         # Step 3: Generate metadata
         metadata = generate_metadata(topic, products_list)
+        if not metadata:
+            return jsonify({'status': 'error', 'message': 'Metadata generation failed'}), 500
         
         # Step 4: Create Shopify draft
         draft_result = create_shopify_draft(
-            metadata['title'],
-            content_result['content'],
+            metadata.get('title', topic),
+            content_result.get('content', ''),
             metadata
         )
         
