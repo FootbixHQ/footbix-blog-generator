@@ -18,6 +18,59 @@ def research_keywords(keyword):
     pwd = os.getenv('DATAFORSEO_PASSWORD')
     if not login or not pwd:
         return {'status': 'success', 'search_volume': 500, 'competition': 'MEDIUM', 'cpc': 2.0}
+
+def generate_blog_content(topic, products):
+    """Generate blog content using Koala AI API directly"""
+    koala_api_key = os.getenv('KOALA_API_KEY')
+    if not koala_api_key:
+        return {'status': 'error', 'message': 'KOALA_API_KEY not configured', 'content': None}
+    products_str = ', '.join(products) if isinstance(products, list) else products
+    prompt = f"""Write a premium soccer equipment buying guide blog post.
+Topic: {topic}
+Featured Products: {products_str}
+Structure:
+1. Introduction (150 words)
+2. What You Need to Know (200 words)
+3. Product Comparison (300 words)
+4. Detailed Reviews (400 words)
+5. How to Choose (200 words)
+6. FAQ (200 words)
+7. Conclusion (100 words)
+Requirements:
+- Professional, engaging tone
+- SEO-optimized with natural keyword placement
+- Include specifications and use cases
+- Total: ~1500 words
+- Add image placeholders like [INSERT COMPARISON IMAGE]"""
+    try:
+        headers = {'Authorization': f'Bearer {koala_api_key}', 'Content-Type': 'application/json'}
+        payload = {'prompt': prompt, 'length': 'long', 'tone': 'professional'}
+        response = requests.post('https://api.koala.sh/v1/write', json=payload, headers=headers, timeout=60)
+        if response.status_code == 200:
+            content = response.json().get('text', '')
+            return {'status': 'success', 'content': content} if content else {'status': 'error', 'message': 'No content', 'content': None}
+        return {'status': 'error', 'message': f'Koala error: {response.status_code}', 'content': None}
+    except Exception as e:
+        return {'status': 'error', 'message': str(e), 'content': None}
+
+def create_shopify_draft(title, content, metadata):
+    """Create Shopify draft using Shopify API directly"""
+    store = os.getenv("SHOPIFY_STORE", "footbix.myshopify.com")
+    token = os.getenv("SHOPIFY_ADMIN_API_TOKEN")
+    if not token:
+        return {'status': 'error', 'message': 'SHOPIFY token not set'}
+    try:
+        url = f"https://{store}/admin/api/2024-01/blogs/241253381/articles.json"
+        headers = {'X-Shopify-Access-Token': token}
+        body_html = f"<h1>{title}</h1><p>{metadata['meta_description']}</p>{content}"
+        payload = {'article': {'title': title, 'body_html': body_html, 'status': 'draft'}}
+        r = requests.post(url, json=payload, headers=headers, timeout=10)
+        if r.status_code in [200, 201]:
+            return {'status': 'success', 'article_id': r.json().get('article', {}).get('id')}
+        return {'status': 'error', 'message': f'Shopify error: {r.status_code}'}
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
     try:
         url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
         r = requests.post(url, json=[{"keywords": [keyword]}], auth=(login, pwd), timeout=10)
