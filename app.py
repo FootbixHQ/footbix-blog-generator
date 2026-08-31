@@ -2,8 +2,12 @@ from flask import Flask, render_template, request, jsonify
 import requests
 import os
 import json
+from image_routes import images_bp
 
 app = Flask(__name__)
+
+# Register blueprints
+app.register_blueprint(images_bp)
 
 # Only need ONE key now
 COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")

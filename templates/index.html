@@ -178,19 +178,31 @@
                 <input 
                     type="text" 
                     id="topic" 
-                    placeholder="e.g., XbotGo Falcon vs Chameleon"
+                    placeholder="Enter the topic you would like to write about"
                     required
                 >
-                <div class="hint">Enter the blog topic or keyword you want to write about</div>
+                <div class="hint">Enter the topic you would like to write about</div>
             </div>
             
             <div class="form-group">
                 <label for="products">Products (optional)</label>
                 <textarea 
                     id="products" 
-                    placeholder="e.g., XbotGo Falcon, XbotGo Chameleon&#10;(separate by comma)"
+                    placeholder="Highlight the product keywords you want to target"
                 ></textarea>
-                <div class="hint">List products to feature. Leave blank for auto-research.</div>
+                <div class="hint">Highlight the product keywords you want to target</div>
+            </div>
+
+            <div class="form-group">
+                <label for="featuredImage">Featured Blog Image (optional)</label>
+                <input type="file" id="featuredImage" accept="image/*">
+                <div class="hint">Upload an eye-catching image for the blog post header (JPG, PNG, WebP recommended)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="articleImages">Article Images (optional)</label>
+                <input type="file" id="articleImages" accept="image/*" multiple>
+                <div class="hint">Upload images to feature throughout the article. Select multiple images to include in the blog content</div>
             </div>
             
             <button type="submit" id="submitBtn">Generate Blog Draft</button>
