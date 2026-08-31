@@ -795,8 +795,11 @@
             }
         });
         
-        // Load images on page load
-        document.addEventListener('DOMContentLoaded', loadStoreImages);
+        // Load images and products on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStoreImages();
+            loadProducts();
+        });
         
         // ============ PRODUCT SELECTOR ============
         const form = document.getElementById('generatorForm');
