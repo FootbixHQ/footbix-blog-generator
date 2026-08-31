@@ -50,54 +50,87 @@ def research_keywords(keyword):
 
 # --- KoalaWriter via Composio ---
 def generate_blog_content(topic, products):
-    """Generate blog using Composio's KoalaWriter connection"""
+    """Generate blog content using Koala AI API directly"""
     print(f"Generating content for: {topic}")
     
-    products_str = ", ".join(products) if isinstance(products, list) else products
+    koala_api_key = os.getenv('KOALA_API_KEY')
     
-    prompt = f"""Write a premium soccer equipment buying guide with this structure:
+    if not koala_api_key:
+        return {
+            'status': 'error',
+            'message': 'KOALA_API_KEY not configured',
+            'content': None
+        }
+    
+    products_str = ', '.join(products) if isinstance(products, list) else products
+    
+    prompt = f"""Write a premium soccer equipment buying guide blog post.
 
 Topic: {topic}
-Products to compare: {products_str}
+Featured Products: {products_str}
 
 Structure:
-1. Introduction (150 words) - Hook
-2. What You Need to Know (200 words)
-3. Product Comparison (300 words) - Specs, pros/cons, price
-4. Detailed Reviews (400 words)
-5. How to Choose (200 words)
-6. FAQ (200 words)
-7. Conclusion (100 words)
+1. Introduction (150 words) - Hook with why this matters
+2. What You Need to Know (200 words) - Explain the tech/benefits
+3. Product Comparison (300 words) - Side-by-side comparison
+4. Detailed Reviews (400 words) - One section per product with specs
+5. How to Choose (200 words) - Decision framework
+6. FAQ (200 words) - Common questions  
+7. Conclusion (100 words) - Call to action to check Footbix
 
-Write professionally, SEO-optimized, ~1500 words."""
+Requirements:
+- Professional, engaging tone
+- SEO-optimized with natural keyword placement
+- Include specifications and use cases
+- Total: ~1500 words
+- Add image placeholders like [INSERT COMPARISON IMAGE]"""
     
     try:
-        exec_url = f"{COMPOSIO_BASE_URL}/connectors/execute"
-        payload = {
-            'connectorId': 'koalawriter',
-            'action': 'write_content',
-            'input': {
-                'prompt': prompt,
-                'length': 'long',
-                'tone': 'professional'
-            }
+        headers = {
+            'Authorization': f'Bearer {koala_api_key}',
+            'Content-Type': 'application/json'
         }
         
-        response = requests.post(exec_url, json=payload, headers=headers, timeout=60)
+        payload = {
+            'prompt': prompt,
+            'length': 'long',
+            'tone': 'professional'
+        }
+        
+        response = requests.post(
+            'https://api.koala.sh/v1/write',
+            json=payload,
+            headers=headers,
+            timeout=60
+        )
         
         if response.status_code == 200:
-            result = response.json().get('result', {})
-            content = result.get('text', '')
+            content = response.json().get('text', '')
             if content:
-                return {'status': 'success', 'content': content}
+                return {
+                    'status': 'success',
+                    'content': content,
+                    'message': f'Generated {len(content)} characters'
+                }
             else:
-                return {'status': 'error', 'message': 'No content generated'}
+                return {
+                    'status': 'error',
+                    'message': 'No content generated',
+                    'content': None
+                }
         else:
-            return {'status': 'error', 'message': f'KoalaWriter error: {response.status_code}'}
+            return {
+                'status': 'error',
+                'message': f'Koala AI error: {response.status_code}',
+                'content': None
+            }
     except Exception as e:
-        return {'status': 'error', 'message': str(e)}
-
-# --- Shopify via Composio ---
+        print(f"Koala AI error: {e}")
+        return {
+            'status': 'error',
+            'message': str(e),
+            'content': None
+        }
 def create_shopify_draft(title, content, metadata):
     """Create Shopify draft using Composio's Shopify connection"""
     print(f"Creating Shopify draft: {title}")
