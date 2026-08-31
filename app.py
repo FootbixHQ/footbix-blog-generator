@@ -342,15 +342,16 @@ def generate():
     try:
         data = request.json
         topic = data.get('topic', '').strip()
+        keyword = data.get('target_keyword', topic).strip()  # Use target_keyword or fall back to topic
         products = data.get('products', '').strip()
         
-        if not topic:
+        if not topic or not keyword:
             return jsonify({'status': 'error', 'message': 'Topic required'}), 400
         
         products_list = [p.strip() for p in products.split(',') if p.strip()] if products else [topic]
         
         # Step 1: Research
-        seo_data = research_keywords(topic)
+        seo_data = research_keywords(keyword)
         if seo_data['status'] != 'success':
             return jsonify({'status': 'error', 'message': f'Research failed: {seo_data.get("message")}'}), 500
         
