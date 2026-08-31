@@ -52,7 +52,7 @@ def create_shopify_draft(title, content, metadata):
     try:
         url = f"https://{store}/admin/api/2024-01/blogs/241253381/articles.json"
         headers = {'X-Shopify-Access-Token': token}
-        body_html = f"<h1>{title}</h1><p>{metadata['meta_description']}</p>{content}"
+        body_html = f"<h1>{title}</h1><p>{metadata.get('meta_description', 'Expert guide')}</p>{content}"
         payload = {'article': {'title': title, 'body_html': body_html, 'status': 'draft'}}
         r = requests.post(url, json=payload, headers=headers, timeout=10)
         if r.status_code in [200, 201]:
