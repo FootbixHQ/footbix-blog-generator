@@ -293,6 +293,210 @@
             color: #999;
             font-style: italic;
         }
+        
+        /* Image Browser Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            overflow: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #e80000;
+        }
+        
+        .modal-search {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-search input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        
+        .image-card {
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        
+        .image-card:hover {
+            border-color: #e80000;
+            box-shadow: 0 2px 8px rgba(232, 0, 0, 0.15);
+        }
+        
+        .image-card.selected {
+            border-color: #e80000;
+            box-shadow: 0 0 0 3px rgba(232, 0, 0, 0.2);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .image-card-checkbox {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            accent-color: #e80000;
+        }
+        
+        .image-card-product {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 8px;
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .modal-footer button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .modal-btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #d0d0d0;
+        }
+        
+        .modal-btn-confirm {
+            background: #e80000;
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: #cc0000;
+        }
+        
+        .modal-btn-confirm:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .image-browser-btn {
+            background: #f5f5f5;
+            border: 2px solid #e80000;
+            color: #e80000;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+        
+        .image-browser-btn:hover {
+            background: #ffe0e0;
+        }
+        
+        .image-input-container {
+            position: relative;
+        }
+        
+        .no-images {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -352,13 +556,19 @@
 
             <div class="form-group">
                 <label for="featuredImage">Featured Blog Image (optional)</label>
-                <input type="file" id="featuredImage" accept="image/*">
+                <div class="image-input-container">
+                    <input type="file" id="featuredImage" accept="image/*">
+                    <button type="button" id="browseFeaturedBtn" class="image-browser-btn">🖼️ Browse Store Images</button>
+                </div>
                 <div class="hint">Upload an eye-catching image for the blog post header (JPG, PNG, WebP recommended)</div>
             </div>
 
             <div class="form-group">
                 <label for="articleImages">Article Images (optional)</label>
-                <input type="file" id="articleImages" accept="image/*" multiple>
+                <div class="image-input-container">
+                    <input type="file" id="articleImages" accept="image/*" multiple>
+                    <button type="button" id="browseArticleBtn" class="image-browser-btn">🖼️ Browse Store Images</button>
+                </div>
                 <div class="hint">Upload images to feature throughout the article. Select multiple images to include in the blog content</div>
             </div>
             
@@ -373,7 +583,222 @@
         <div class="result" id="result"></div>
     </div>
     
+    <!-- Image Browser Modal -->
+    <div class="modal" id="imageBrowserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Browse Store Images</h2>
+                <button type="button" class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input 
+                    type="text" 
+                    id="imageSearch" 
+                    placeholder="🔍 Search images by product name..."
+                >
+            </div>
+            <div class="modal-body">
+                <div class="image-grid" id="imageGrid">
+                    <div class="no-images">Loading images...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn-cancel" id="modalCancel">Cancel</button>
+                <button type="button" class="modal-btn-confirm" id="modalConfirm" disabled>
+                    Insert <span id="selectedCount">0</span> Image<span id="pluralS">s</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
+        // ============ IMAGE BROWSER ============
+        const modal = document.getElementById('imageBrowserModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const imageSearch = document.getElementById('imageSearch');
+        const imageGrid = document.getElementById('imageGrid');
+        const browseFeaturedbtn = document.getElementById('browseFeaturedBtn');
+        const browseArticleBtn = document.getElementById('browseArticleBtn');
+        
+        let allStoreImages = [];
+        let selectedImages = new Set();
+        let currentMode = null; // 'featured' or 'article'
+        
+        // Load store images
+        async function loadStoreImages() {
+            try {
+                const response = await fetch('/api/product-images');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    allStoreImages = data.images;
+                    renderImageGrid(allStoreImages);
+                } else {
+                    imageGrid.innerHTML = '<div class="no-images">Error loading images</div>';
+                }
+            } catch (error) {
+                console.error('Error loading store images:', error);
+                imageGrid.innerHTML = '<div class="no-images">Error loading images</div>';
+            }
+        }
+        
+        // Render image grid
+        function renderImageGrid(imagesToRender) {
+            if (imagesToRender.length === 0) {
+                imageGrid.innerHTML = '<div class="no-images">No images found</div>';
+                return;
+            }
+            
+            imageGrid.innerHTML = imagesToRender.map(img => `
+                <label class="image-card ${selectedImages.has(img.id) ? 'selected' : ''}" data-image-id="${img.id}">
+                    <input 
+                        type="checkbox" 
+                        class="image-card-checkbox"
+                        ${selectedImages.has(img.id) ? 'checked' : ''}
+                    >
+                    <img src="${img.url}" alt="${img.altText}">
+                    <div class="image-card-product">${img.productTitle}</div>
+                </label>
+            `).join('');
+            
+            // Add event listeners
+            document.querySelectorAll('.image-card input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleImageToggle);
+            });
+        }
+        
+        // Toggle image selection
+        function handleImageToggle(e) {
+            const checkbox = e.target;
+            const card = checkbox.closest('.image-card');
+            const imageId = card.dataset.imageId;
+            
+            if (checkbox.checked) {
+                if (currentMode === 'featured') {
+                    // Featured image: only allow one
+                    selectedImages.clear();
+                    document.querySelectorAll('.image-card').forEach(c => c.classList.remove('selected'));
+                    document.querySelectorAll('.image-card input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    selectedImages.add(imageId);
+                } else {
+                    // Article images: allow multiple
+                    selectedImages.add(imageId);
+                }
+                card.classList.add('selected');
+                checkbox.checked = true;
+            } else {
+                selectedImages.delete(imageId);
+                card.classList.remove('selected');
+            }
+            
+            updateModalButton();
+        }
+        
+        // Update modal button state
+        function updateModalButton() {
+            const count = selectedImages.size;
+            const plural = count !== 1;
+            
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('pluralS').textContent = plural ? 's' : '';
+            modalConfirm.disabled = count === 0;
+        }
+        
+        // Search images
+        imageSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                renderImageGrid(allStoreImages);
+            } else {
+                const filtered = allStoreImages.filter(img =>
+                    img.productTitle.toLowerCase().includes(searchTerm)
+                );
+                renderImageGrid(filtered);
+            }
+        });
+        
+        // Open modal for featured image
+        browseFeaturedbtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentMode = 'featured';
+            selectedImages.clear();
+            imageSearch.value = '';
+            renderImageGrid(allStoreImages);
+            modal.classList.add('active');
+            updateModalButton();
+        });
+        
+        // Open modal for article images
+        browseArticleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentMode = 'article';
+            selectedImages.clear();
+            imageSearch.value = '';
+            renderImageGrid(allStoreImages);
+            modal.classList.add('active');
+            updateModalButton();
+        });
+        
+        // Close modal
+        modalClose.addEventListener('click', () => {
+            modal.classList.remove('active');
+            selectedImages.clear();
+            currentMode = null;
+        });
+        
+        modalCancel.addEventListener('click', () => {
+            modal.classList.remove('active');
+            selectedImages.clear();
+            currentMode = null;
+        });
+        
+        // Confirm selection
+        modalConfirm.addEventListener('click', async () => {
+            if (selectedImages.size === 0) return;
+            
+            try {
+                // Get the selected image objects
+                const selectedImageObjects = allStoreImages.filter(img => selectedImages.has(img.id));
+                
+                if (currentMode === 'featured') {
+                    // For featured image, download and set to file input
+                    const image = selectedImageObjects[0];
+                    const blob = await fetch(image.url).then(r => r.blob());
+                    const file = new File([blob], `featured-${image.id.split('/').pop()}.jpg`, { type: 'image/jpeg' });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('featuredImage').files = dataTransfer.files;
+                } else {
+                    // For article images, download and add to file input
+                    const files = [];
+                    for (const image of selectedImageObjects) {
+                        const blob = await fetch(image.url).then(r => r.blob());
+                        const file = new File([blob], `article-${image.id.split('/').pop()}.jpg`, { type: 'image/jpeg' });
+                        files.push(file);
+                    }
+                    
+                    const dataTransfer = new DataTransfer();
+                    files.forEach(file => dataTransfer.items.add(file));
+                    document.getElementById('articleImages').files = dataTransfer.files;
+                }
+                
+                modal.classList.remove('active');
+                selectedImages.clear();
+                currentMode = null;
+            } catch (error) {
+                console.error('Error processing selected images:', error);
+                alert('Error processing images. Please try again.');
+            }
+        });
+        
+        // Load images on page load
+        document.addEventListener('DOMContentLoaded', loadStoreImages);
+        
+        // ============ PRODUCT SELECTOR ============
         const form = document.getElementById('generatorForm');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
@@ -490,9 +915,6 @@
             });
             updateSelectedList();
         });
-        
-        // Load products when page loads
-        document.addEventListener('DOMContentLoaded', loadProducts);
         
         // Form submission
         form.addEventListener('submit', async (e) => {

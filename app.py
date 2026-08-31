@@ -307,6 +307,95 @@ def get_products():
     products = fetch_shopify_products()
     return jsonify({'status': 'success', 'products': products})
 
+@app.route('/api/product-images', methods=['GET'])
+def get_product_images():
+    """API endpoint to fetch all product images for image browser"""
+    try:
+        store_url = os.getenv('SHOPIFY_STORE_URL')
+        access_token = os.getenv('SHOPIFY_ADMIN_API_TOKEN')
+        api_version = os.getenv('SHOPIFY_API_VERSION', '2024-01')
+        
+        headers_shopify = {
+            'X-Shopify-Access-Token': access_token,
+            'Content-Type': 'application/json'
+        }
+        
+        url = f"{store_url}/admin/api/{api_version}/graphql.json"
+        
+        all_images = []
+        has_next_page = True
+        next_cursor = None
+        
+        while has_next_page:
+            query = f"""
+            {{
+              products(first: 250 {f'after: "{next_cursor}"' if next_cursor else ""}) {{
+                pageInfo {{
+                  hasNextPage
+                  endCursor
+                }}
+                edges {{
+                  node {{
+                    id
+                    title
+                    handle
+                    images(first: 10) {{
+                      edges {{
+                        node {{
+                          id
+                          url
+                          altText
+                          width
+                          height
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            
+            response = requests.post(url, json={'query': query}, headers=headers_shopify, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if 'errors' in data:
+                    print(f"GraphQL errors: {data['errors']}")
+                    break
+                
+                if 'data' in data and 'products' in data['data']:
+                    products_data = data['data']['products']
+                    
+                    for edge in products_data['edges']:
+                        node = edge['node']
+                        product_title = node['title']
+                        product_handle = node['handle']
+                        
+                        for img_edge in node.get('images', {}).get('edges', []):
+                            img_node = img_edge['node']
+                            all_images.append({
+                                'id': img_node['id'],
+                                'url': img_node['url'],
+                                'altText': img_node.get('altText', product_title),
+                                'productTitle': product_title,
+                                'productHandle': product_handle,
+                                'width': img_node.get('width'),
+                                'height': img_node.get('height')
+                            })
+                    
+                    has_next_page = products_data['pageInfo']['hasNextPage']
+                    next_cursor = products_data['pageInfo']['endCursor']
+            else:
+                print(f"Shopify API error: {response.status_code}")
+                break
+        
+        return jsonify({'status': 'success', 'images': all_images})
+    except Exception as e:
+        print(f"Error fetching product images: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/generate', methods=['POST'])
 def generate():
     """Main generation endpoint"""
