@@ -330,7 +330,7 @@ def get_product_images():
 def generate():
     """Main generation endpoint"""
     try:
-        data = request.json or {}
+        data = request.get_json() or {}
         topic = (data.get('topic') or '').strip()
         products = (data.get('products') or '').strip()
         
