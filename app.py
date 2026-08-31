@@ -342,7 +342,7 @@ def generate():
         
         # Step 1: Research
         seo_data = research_keywords(keyword)
-        if seo_data['status'] != 'success':
+        if not seo_data or seo_data.get('status') != 'success':
             return jsonify({'status': 'error', 'message': f'Research failed: {seo_data.get("message")}'}), 500
         
         # Step 2: Generate content
@@ -362,8 +362,8 @@ def generate():
             metadata
         )
         
-        if draft_result['status'] != 'success':
-            return jsonify({'status': 'error', 'message': f'Draft creation failed: {draft_result.get("message")}'}), 500
+        if not draft_result or draft_result.get('status') != 'success':
+            return jsonify({'status': 'error', 'message': f'Draft creation failed: {draft_result.get("message") if draft_result else "No response"}'}), 500
         
         return jsonify({
             'status': 'success',
