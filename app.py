@@ -87,7 +87,7 @@ def generate():
     try:
         data = request.json or {}
         topic = data.get('topic', '').strip()
-        keyword = data.get('keyword', '').strip()
+        keyword = data.get('topic', '').strip()  # use topic as keyword
         products = data.get('products', '').strip()
         
         if not topic or not keyword:
