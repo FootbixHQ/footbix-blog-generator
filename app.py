@@ -160,8 +160,8 @@ def generate_metadata(topic, products):
     }
 
 # --- Shopify Products ---
-def fetch_shopify_products():
-    """Fetch all products from Shopify store"""
+def fetch_shopify_products(first=250, after=None):
+    """Fetch all products from Shopify store with images and pricing"""
     try:
         store_url = os.getenv('SHOPIFY_STORE_URL')
         access_token = os.getenv('SHOPIFY_ADMIN_API_TOKEN')
@@ -173,36 +173,114 @@ def fetch_shopify_products():
         }
         
         url = f"{store_url}/admin/api/{api_version}/graphql.json"
-        query = """
-        {
-          products(first: 250) {
-            edges {
-              node {
+        
+        # Build query with cursor for pagination
+        after_clause = f'after: "{after}"' if after else ""
+        query = f"""
+        {{
+          products(first: {first} {after_clause}) {{
+            pageInfo {{
+              hasNextPage
+              endCursor
+            }}
+            edges {{
+              node {{
                 id
                 title
                 handle
-              }
-            }
-          }
-        }
+                featuredImage {{
+                  url
+                  altText
+                }}
+                priceRange {{
+                  minVariantPrice {{
+                    amount
+                    currencyCode
+                  }}
+                  maxVariantPrice {{
+                    amount
+                    currencyCode
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }}
         """
         
-        response = requests.post(url, json={'query': query}, headers=headers_shopify, timeout=10)
+        all_products = []
+        has_next_page = True
+        next_cursor = None
         
-        if response.status_code == 200:
-            data = response.json()
-            if 'data' in data and 'products' in data['data']:
-                products = []
-                for edge in data['data']['products']['edges']:
-                    node = edge['node']
-                    products.append({
-                        'id': node['id'],
-                        'title': node['title'],
-                        'handle': node['handle']
-                    })
-                return products
+        while has_next_page:
+            query_with_cursor = f"""
+            {{
+              products(first: 250 {f'after: "{next_cursor}"' if next_cursor else ""}) {{
+                pageInfo {{
+                  hasNextPage
+                  endCursor
+                }}
+                edges {{
+                  node {{
+                    id
+                    title
+                    handle
+                    featuredImage {{
+                      url
+                      altText
+                    }}
+                    priceRange {{
+                      minVariantPrice {{
+                        amount
+                        currencyCode
+                      }}
+                      maxVariantPrice {{
+                        amount
+                        currencyCode
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            
+            response = requests.post(url, json={'query': query_with_cursor}, headers=headers_shopify, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if 'errors' in data:
+                    print(f"GraphQL errors: {data['errors']}")
+                    break
+                    
+                if 'data' in data and 'products' in data['data']:
+                    products_data = data['data']['products']
+                    
+                    for edge in products_data['edges']:
+                        node = edge['node']
+                        featured_image = node.get('featuredImage')
+                        price_range = node.get('priceRange', {})
+                        min_price = price_range.get('minVariantPrice', {})
+                        
+                        all_products.append({
+                            'id': node['id'],
+                            'title': node['title'],
+                            'handle': node['handle'],
+                            'image': featured_image.get('url') if featured_image else None,
+                            'imageAlt': featured_image.get('altText', node['title']) if featured_image else node['title'],
+                            'price': min_price.get('amount', 'N/A'),
+                            'currency': min_price.get('currencyCode', 'USD')
+                        })
+                    
+                    # Check for next page
+                    has_next_page = products_data['pageInfo']['hasNextPage']
+                    next_cursor = products_data['pageInfo']['endCursor']
+            else:
+                print(f"Shopify API error: {response.status_code}")
+                break
         
-        return []
+        return all_products
     except Exception as e:
         print(f"Error fetching products: {e}")
         return []
