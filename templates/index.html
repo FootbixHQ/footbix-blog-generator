@@ -677,18 +677,20 @@
             
             if (checkbox.checked) {
                 if (currentMode === 'featured') {
-                    // Featured image: only allow one
+                    // Featured image: only allow ONE
                     selectedImages.clear();
                     document.querySelectorAll('.image-card').forEach(c => c.classList.remove('selected'));
                     document.querySelectorAll('.image-card input[type="checkbox"]').forEach(cb => cb.checked = false);
                     selectedImages.add(imageId);
-                } else {
-                    // Article images: allow multiple
+                    card.classList.add('selected');
+                    checkbox.checked = true;
+                } else if (currentMode === 'article') {
+                    // Article images: allow MULTIPLE
                     selectedImages.add(imageId);
+                    card.classList.add('selected');
                 }
-                card.classList.add('selected');
-                checkbox.checked = true;
             } else {
+                // Unchecking
                 selectedImages.delete(imageId);
                 card.classList.remove('selected');
             }
